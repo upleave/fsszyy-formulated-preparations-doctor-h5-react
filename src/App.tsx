@@ -1,6 +1,7 @@
 import "./App.css";
 import { showAlert } from "./utils/modal.utils";
 import PullList from "./components/PullList";
+import { useQuery } from "@tanstack/react-query";
 
 let index = 1;
 async function getListData(refresh?: boolean) {
@@ -23,15 +24,25 @@ function App() {
     showAlert({ title: "提示", children: <p>这是弹窗内容</p> });
   }
 
+  const { data } = useQuery({
+    queryKey: ["list"],
+    queryFn: async () => {
+      const response = await fetch('https://jsonplaceholder.typicode.com/users')
+      return response.json()
+    }
+  })
+
+  console.log(data)
+
   return (
     <>
-      <div className='h-[500px]'>
+      <div className='h-[100vh]'>
         <PullList
-          getData={({ page }) => {
-            console.log(page)
-            return getListData(page === 1);
+          getData={() => {
+            console.log(data)
+            return data
           }}
-          renderItem={(item) => <div key={item.id}>{item.name}</div>}
+          renderItem={(item) => <div key={item.id + item.name}>{item.name}</div>}
         />
       </div>
       <button onClick={handleShowModal}>显示弹窗</button>

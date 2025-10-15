@@ -16,6 +16,9 @@ interface IPagenationParams {
   page: number;
   rows: number;
 }
+
+// 刷新是的列表回弹时间 （ms）
+const TIME_BOUNCE = 300;
 // 初始化滚动列表
 function initBScroll(ele: HTMLElement | string) {
   return new BScroll(ele, {
@@ -31,8 +34,6 @@ function initBScroll(ele: HTMLElement | string) {
     },
   });
 }
-// 刷新是的列表回弹时间 （ms）
-const TIME_BOUNCE = 800;
 // 下拉刷新状态
 const PULLING_DOWN_STATE = {
   IDLE: "idle",
