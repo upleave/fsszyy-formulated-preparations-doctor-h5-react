@@ -31,21 +31,34 @@ export default function LoginField({
     setInputType(!isPlain ? "password" : "text");
   }
   return (
-    <div className='border-b border-b-[#E8E8E8]'>
-      <label className='font-bold text-[36px] leading-[50px] m-0 w-full mb-[8px]'>{label}</label>
-      <div className='flex items-center gap-[16px]'>
-        <input
-          placeholder={placeholder}
-          className='mt-[16px] text-[32px] !leading-[104px] focus:outline-0 grow-1'
-          name={name}
-          type={inputType}
-          value={value}
-          onInput={onInput}
-          onChange={onChange}
-        />
-        {type === "password" && <img className='size-[40px]' src={eyeIcon} alt='' onClick={togglePlain} />}
-        {error && <div></div>}
+    <div>
+      <div className="border-b border-b-[#E8E8E8]">
+        <label className="font-bold text-[36px] leading-[50px] m-0 w-full mb-[8px]">
+          {label}
+        </label>
+        <div className="flex items-center gap-[16px] relative">
+          {/* {error && <div className="absolute top-0">{error}</div>} */}
+          <input
+            placeholder={placeholder}
+            className="mt-[16px] text-[32px] !leading-[104px] focus:outline-0 grow-1"
+            name={name}
+            type={inputType}
+            value={value}
+            onInput={onInput}
+            onChange={onChange}
+          />
+          {type === "password" && (
+            <img
+              className="size-[40px]"
+              src={eyeIcon}
+              alt=""
+              onClick={togglePlain}
+            />
+          )}
+        </div>
       </div>
+
+      {error && <div className="text-red-500 text-[26px] py-[8px]">{error}</div>}
     </div>
   );
 }

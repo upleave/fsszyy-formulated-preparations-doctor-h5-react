@@ -1,6 +1,17 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig, RequestConfig } from "axios";
-import { getAccessToken, getRefreshToken, setAuthTokens, clearAuthTokens } from "./auth.utils";
-import type { ApiResponse, TokenResponse } from "../types/request";
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import {
+  getAccessToken,
+  getRefreshToken,
+  setAuthTokens,
+  clearAuthTokens,
+} from "./auth.utils";
+import type {
+  ApiResponse,
+  RequestConfig,
+  TokenResponse,
+} from "../types/request";
+
+const REFRESH_TOKEN_URL = `http://${__ADMIN_URL__}/system/auth/refresh-token`;
 
 const axiosInstance = axios.create({
   baseURL: __H5_URL__,
@@ -13,7 +24,10 @@ function isAuthEndpoint(url?: string) {
   return whiteList.includes(url);
 }
 
-function shouldRefreshToken(error: AxiosError, config: InternalAxiosRequestConfig) {
+function shouldRefreshToken(
+  error: AxiosError,
+  config: InternalAxiosRequestConfig
+) {
   return (
     error.response?.status === 401 &&
     !isAuthEndpoint(config.url!) &&
@@ -23,7 +37,10 @@ function shouldRefreshToken(error: AxiosError, config: InternalAxiosRequestConfi
 }
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
-async function handleTokenRefresh(error: AxiosError, originalRequest: InternalAxiosRequestConfig) {
+async function handleTokenRefresh(
+  error: AxiosError,
+  originalRequest: InternalAxiosRequestConfig & { _retry?: boolean }
+) {
   originalRequest._retry = true;
 
   if (isRefreshing) {
@@ -56,9 +73,13 @@ async function refreshAuthToken() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) throw new Error("No refresh token available");
 
-  const response = await axios.post<ApiResponse<TokenResponse>>(`http://${__ADMIN_URL__}/system/auth/refresh-token`, null, {
-    params: { refreshToken }
-  });
+  const response = await axios.post<ApiResponse<TokenResponse>>(
+    REFRESH_TOKEN_URL,
+    null,
+    {
+      params: { refreshToken },
+    }
+  );
 
   if (response.data.success) {
     const { access_token, refresh_token } = response.data.data;
@@ -76,6 +97,7 @@ function onRefreshSuccess(newToken: string) {
 }
 
 function onRefreshFailure() {
+  console.warn("Token refresh failed, redirecting to login...");
   clearAuthTokens();
   refreshSubscribers = [];
   refreshSubscribers.length = 0;
@@ -101,7 +123,9 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     if (shouldRefreshToken(error, originalRequest)) {
       return handleTokenRefresh(error, originalRequest);
@@ -110,23 +134,41 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export function get<T = unknown>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
+export function get<T = unknown>(
+  url: string,
+  config?: RequestConfig
+): Promise<ApiResponse<T>> {
   return axiosInstance.get(url, config);
 }
 
-export function post<T, D = unknown>(url: string, data?: D, config?: RequestConfig): Promise<ApiResponse<T>> {
+export function post<T, D = unknown>(
+  url: string,
+  data?: D,
+  config?: RequestConfig
+): Promise<ApiResponse<T>> {
   return axiosInstance.post(url, data, config);
 }
 
-export function put<T, D = unknown>(url: string, data?: D, config?: RequestConfig): Promise<ApiResponse<T>> {
+export function put<T, D = unknown>(
+  url: string,
+  data?: D,
+  config?: RequestConfig
+): Promise<ApiResponse<T>> {
   return axiosInstance.put(url, data, config);
 }
 
-export function del<T>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
+export function del<T>(
+  url: string,
+  config?: RequestConfig
+): Promise<ApiResponse<T>> {
   return axiosInstance.delete(url, config);
 }
 
-export function patch<T, D = unknown>(url: string, data?: D, config?: RequestConfig): Promise<ApiResponse<T>> {
+export function patch<T, D = unknown>(
+  url: string,
+  data?: D,
+  config?: RequestConfig
+): Promise<ApiResponse<T>> {
   return axiosInstance.patch(url, data, config);
 }
 

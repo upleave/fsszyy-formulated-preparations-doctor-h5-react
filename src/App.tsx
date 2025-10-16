@@ -2,22 +2,7 @@ import "./App.css";
 import { showAlert } from "./utils/modal.utils";
 import PullList from "./components/PullList";
 import { useQuery } from "@tanstack/react-query";
-
-let index = 1;
-async function getListData(refresh?: boolean) {
-  if (refresh) index = 1;
-  return new Promise<{id: string, name: string}[]>((resolve) => {
-    setTimeout(() => {
-      const arr = [...Array(10)].map((_, i) => ({
-        id: `${index + i}`,
-        name: `${index + i} name`
-      }));
-      console.log(arr);
-      resolve(arr);
-      index += 10;
-    }, 500);
-  });
-}
+import { get } from "./utils/request.utils";
 
 function App() {
   function handleShowModal() {
@@ -26,23 +11,27 @@ function App() {
 
   const { data } = useQuery({
     queryKey: ["list"],
-    queryFn: async () => {
-      const response = await fetch('https://jsonplaceholder.typicode.com/users')
-      return response.json()
-    }
-  })
+    queryFn: async (): Promise<{ id: string; name: string }[]> => {
+      const response = await get<{ id: string; name: string }[]>(
+        "https://jsonplaceholder.typicode.com/users"
+      );
+      return response.data;
+    },
+  });
 
-  console.log(data)
+  console.log(data);
 
   return (
     <>
-      <div className='h-[100vh]'>
+      <div className="h-[100vh]">
         <PullList
-          getData={() => {
-            console.log(data)
-            return data
+          getData={async () => {
+            console.log(data);
+            return data ?? [];
           }}
-          renderItem={(item) => <div key={item.id + item.name}>{item.name}</div>}
+          renderItem={(item) => (
+            <div key={item.id + item.name}>{item.name}</div>
+          )}
         />
       </div>
       <button onClick={handleShowModal}>显示弹窗</button>
